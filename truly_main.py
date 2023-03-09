@@ -1,9 +1,9 @@
 import json
 
-from flask import Flask, url_for, render_template, redirect
+from flask import Flask, url_for, render_template, redirect, request
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, EmailField
+from wtforms.validators import DataRequired, EqualTo
 
 from data import db_session
 
@@ -21,6 +21,21 @@ class LoginForm(FlaskForm):
     user2 = StringField('Id капитана', validators=[DataRequired()])
     pass2 = PasswordField('Пароль капитана', validators=[DataRequired()])
     submit = SubmitField('Доступ')
+
+
+class UserForm(FlaskForm):
+    email = EmailField('Email/login', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm = PasswordField('Repeat password', validators=[DataRequired(),
+                                                           EqualTo('password',
+                                                                   message='Passwords must match')])
+    name = StringField('Name', validators=[DataRequired()])
+    surname = StringField('Surname', validators=[DataRequired()])
+    age = StringField('Age', validators=[DataRequired()])
+    position = StringField('Position', validators=[DataRequired()])
+    speciality = StringField('Speciality', validators=[DataRequired()])
+    address = StringField('Address', validators=[DataRequired()])
+    submit = SubmitField('Submit')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -103,6 +118,36 @@ def distr():
         "css_file": url_for('static', filename='css/style.css')
     }
     return render_template('distribution.html', **params)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def reg():
+    form = UserForm()
+    if form.validate_on_submit():
+        ans = {"surname": "",
+               "name": "",
+               "age": "",
+               "position": "",
+               "speciality": "",
+               "address": "",
+               "email": "", "password": ""}
+        for i in ans:
+            if i in request.form:
+                ans[i] = request.form[i]
+        user = User()
+        user.name = ans["name"]
+        user.surname = ans["surname"]
+        user.email = ans["email"]
+        user.position = ans["position"]
+        user.speciality = ans["speciality"]
+        user.address = ans["address"]
+        user.age = ans["age"]
+        user.hashed_password = str(hash(ans["password"]))
+        db_sess = db_session.create_session()
+        db_sess.add(user)
+        db_sess.commit()
+        return render_template('sent.html')
+    return render_template('user_form.html', title='Register', form=form)
 
 
 @app.route('/jobs')
