@@ -1,18 +1,40 @@
+import datetime
 import json
+import hashlib
 
-from flask import Flask, url_for, render_template, redirect, request
+from flask import Flask, url_for, render_template, redirect, request, make_response, session
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, EmailField
 from wtforms.validators import DataRequired, EqualTo
+from flask_login import LoginManager, login_user, login_required, logout_user
+
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from data import db_session
 
 from data.beta_code import Jobs, User
 from data.departments import Departments
 
+hasher = hashlib.blake2b(key=b'pseudorandom key', digest_size=16)
+
 db_session.global_init("db/blogs.db")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(
+    days=365
+)
+
+
+# def hash_f(string):
+#     ans = 0
+#     p = 356
+#     m =
+#     for i in range(len(string)):
+#         ans +=
+
+
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 
 class LoginForm(FlaskForm):
@@ -21,6 +43,13 @@ class LoginForm(FlaskForm):
     user2 = StringField('Id капитана', validators=[DataRequired()])
     pass2 = PasswordField('Пароль капитана', validators=[DataRequired()])
     submit = SubmitField('Доступ')
+
+
+class LoginInForm(FlaskForm):
+    email = EmailField('Почта', validators=[DataRequired()])
+    password = PasswordField('Пароль', validators=[DataRequired()])
+    remember_me = BooleanField('Запомнить меня')
+    submit = SubmitField('Войти')
 
 
 class UserForm(FlaskForm):
@@ -38,19 +67,56 @@ class UserForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    db_sess = db_session.create_session()
+    return db_sess.query(User).get(user_id)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
+    form = LoginInForm()
     if form.validate_on_submit():
-        return redirect('/success')
-    return render_template('login.html', title='Аварийный доступ', form=form,
-                           emblem=url_for('static', filename='img/MARS-2-7.png'))
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.email == form.email.data).first()
+        print(form.password.data)
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember_me.data)
+            return redirect("/")
+        return render_template('login_in.html',
+                               message="Неправильный логин или пароль",
+                               form=form)
+    return render_template('login_in.html', title='Авторизация', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
 
 
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template('base.html')
+    # return render_template('base.html')
+    return redirect("/jobs")
+
+
+@app.route("/cookie_test")
+def cookie_test():
+    visits_count = int(request.cookies.get("visits_count", 0))
+    if visits_count:
+        res = make_response(
+            f"Вы пришли на эту страницу {visits_count + 1} раз")
+        res.set_cookie("visits_count", str(visits_count + 1),
+                       max_age=60 * 60 * 24 * 365 * 2)
+    else:
+        res = make_response(
+            "Вы пришли на эту страницу в первый раз за последние 2 года")
+        res.set_cookie("visits_count", '1',
+                       max_age=60 * 60 * 24 * 365 * 2)
+    return res
 
 
 @app.route('/training/<prof>')
@@ -60,6 +126,15 @@ def training(prof):
     else:
         param = {"url": url_for('static', filename='img/science.jpg'), "title": "Научные симуляторы"}
     return render_template('training.html', **param)
+
+
+@app.route("/session_test")
+def session_test():
+    session.permanent = True
+    visits_count = session.get('visits_count', 0)
+    session['visits_count'] = visits_count + 1
+    return make_response(
+        f"Вы пришли на эту страницу {visits_count + 1} раз")
 
 
 @app.route('/table/<gender>/<age>')
@@ -142,7 +217,9 @@ def reg():
         user.speciality = ans["speciality"]
         user.address = ans["address"]
         user.age = ans["age"]
-        user.hashed_password = str(hash(ans["password"]))
+        # hasher.update(bytes(ans["password"], "utf-8"))
+        user.hashed_password = generate_password_hash(ans["password"])
+        print([ans["password"]], user.hashed_password, generate_password_hash(ans["password"]))
         db_sess = db_session.create_session()
         db_sess.add(user)
         db_sess.commit()
