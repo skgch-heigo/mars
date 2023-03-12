@@ -21,7 +21,7 @@
         <td>{{item.finish}}</td>
   </tr>
 </table>
-{% if current_user.is_authenticated and (current_user.id == item.author or current_user.id == 1) %}
+{% if current_user.is_authenticated and (current_user.id == item.author or current_user.id == 1 or item.team_leader == current_user.id) %}
 <a class="btn btn-warning " href="/change_job/{{item.id}}">Изменить</a>
 <a class="btn btn-danger " href="/delete_job/{{item.id}}">Удалить</a>
 {% endif %}

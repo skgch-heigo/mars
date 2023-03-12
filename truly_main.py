@@ -84,7 +84,7 @@ def add_job():
 def delete_job(id_job):
     db_sess = db_session.create_session()
     data = db_sess.query(Jobs).filter(Jobs.id == id_job).first()
-    if data.author == current_user.id or current_user.id == 1:
+    if data.author == current_user.id or current_user.id == 1 or current_user.id == data.team_leader:
         db_sess.delete(data)
         db_sess.commit()
         return redirect('/')
@@ -96,7 +96,7 @@ def delete_job(id_job):
 def change_job(id_job):
     db_sess = db_session.create_session()
     data = db_sess.query(Jobs).filter(Jobs.id == id_job).first()
-    if data.author == current_user.id or current_user.id == 1:
+    if data.author == current_user.id or current_user.id == 1 or current_user.id == data.team_leader:
         form = JobForm()
         if form.validate_on_submit():
             data.job = form.title.data
@@ -255,7 +255,7 @@ def jobs():
     db_sess = db_session.create_session()
     for job in db_sess.query(Jobs):
         jobs_dict.append({"id": job.id, "title": job.job,
-                          "leader": None,
+                          "leader": None, "team_leader": job.team_leader,
                           "duration": str(job.work_size) + " hours",
                           "collabs": job.collaborators,
                           "finish": ("Is finished" if job.is_finished else "Is not finished")})
