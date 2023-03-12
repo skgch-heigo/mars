@@ -1,6 +1,6 @@
 import datetime
 import json
-import hashlib
+
 
 from flask import Flask, url_for, render_template, redirect, request, make_response, session
 from flask_wtf import FlaskForm
@@ -15,7 +15,10 @@ from data import db_session
 from data.beta_code import Jobs, User
 from data.departments import Departments
 
-hasher = hashlib.blake2b(key=b'pseudorandom key', digest_size=16)
+from data.forms.login_in import LoginInForm
+from data.forms.user import UserForm
+from data.forms.job import JobForm
+
 
 db_session.global_init("db/blogs.db")
 app = Flask(__name__)
@@ -23,14 +26,6 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(
     days=365
 )
-
-
-# def hash_f(string):
-#     ans = 0
-#     p = 356
-#     m =
-#     for i in range(len(string)):
-#         ans +=
 
 
 login_manager = LoginManager()
@@ -43,28 +38,6 @@ class LoginForm(FlaskForm):
     user2 = StringField('Id капитана', validators=[DataRequired()])
     pass2 = PasswordField('Пароль капитана', validators=[DataRequired()])
     submit = SubmitField('Доступ')
-
-
-class LoginInForm(FlaskForm):
-    email = EmailField('Почта', validators=[DataRequired()])
-    password = PasswordField('Пароль', validators=[DataRequired()])
-    remember_me = BooleanField('Запомнить меня')
-    submit = SubmitField('Войти')
-
-
-class UserForm(FlaskForm):
-    email = EmailField('Email/login', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm = PasswordField('Repeat password', validators=[DataRequired(),
-                                                           EqualTo('password',
-                                                                   message='Passwords must match')])
-    name = StringField('Name', validators=[DataRequired()])
-    surname = StringField('Surname', validators=[DataRequired()])
-    age = StringField('Age', validators=[DataRequired()])
-    position = StringField('Position', validators=[DataRequired()])
-    speciality = StringField('Speciality', validators=[DataRequired()])
-    address = StringField('Address', validators=[DataRequired()])
-    submit = SubmitField('Submit')
 
 
 @login_manager.user_loader
@@ -87,6 +60,25 @@ def login():
                                message="Неправильный логин или пароль",
                                form=form)
     return render_template('login_in.html', title='Авторизация', form=form)
+
+
+@app.route('/add_job',  methods=['GET', 'POST'])
+@login_required
+def add_job():
+    form = JobForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        job = Jobs()
+        job.job = form.title.data
+        job.team_leader = int(form.team_leader.data)
+        job.work_size = int(form.work_size.data)
+        job.collaborators = form.collaborators.data
+        job.is_finished = form.is_finished.data
+        db_sess.add(job)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('job_form.html', title='Добавление работы',
+                           form=form)
 
 
 @app.route('/logout')

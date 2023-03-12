@@ -13,15 +13,19 @@
 <body>
 <nav>
     {% if current_user.is_authenticated %}
-    <a class="navbar-brand" href="/logout">{{ current_user.name }} {{ current_user.surname }}</a>
+    <p>
+        <a class="navbar-brand" href="/">Миссия Колонизация Марса</a>
+        <a class="navbar-brand" href="/logout">{{ current_user.name }} {{ current_user.surname }}</a>
+    <a href="/add_job" class="btn btn-secondary">Добавить работу</a>
+    </p>
 {% else %}
     <p>
+        <a class="navbar-brand" href="/">Миссия Колонизация Марса</a>
         <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
         <a class="btn btn-success" href="/login">Войти</a>
     </p>
 {% endif %}
 </nav>
-<h1>Миссия Колонизация Марса</h1>
 <h4>И на Марсе будут яблони цвести!</h4>
 <!-- Begin page content -->
 <main role="main" class="container">
