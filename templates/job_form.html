@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Register Form</h1>
+
+{% if action == "add" %}
+<h1>Add Job</h1>
+{% else %}
+<h1>Change Job</h1>
+{% endif %}
 <form action="" method="post" novalidate>
     {{ form.hidden_tag() }}
     <p>
         {{ form.title.label }}<br>
-        {{ form.title(class="form-control") }}<br>
+        {{ form.title(class="form-control", value=data.job) }}<br>
         {% for error in form.title.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
@@ -15,7 +20,7 @@
     </p>
     <p>
         {{ form.team_leader.label }}<br>
-        {{ form.team_leader(class="form-control") }}<br>
+        {{ form.team_leader(class="form-control", value=data.team_leader) }}<br>
         {% for error in form.team_leader.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
@@ -24,7 +29,7 @@
     </p>
     <p>
         {{ form.work_size.label }}<br>
-        {{ form.work_size(class="form-control") }}<br>
+        {{ form.work_size(class="form-control", value=data.work_size) }}<br>
         {% for error in form.work_size.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
@@ -33,14 +38,18 @@
     </p>
     <p>
         {{ form.collaborators.label }}<br>
-        {{ form.collaborators(class="form-control") }}<br>
+        {{ form.collaborators(class="form-control", value=data.collaborators) }}<br>
         {% for error in form.collaborators.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
     </div>
     {% endfor %}
     </p>
+    {% if data == None %}
     <p>{{ form.is_finished() }} {{ form.is_finished.label }}</p>
+    {% else %}
+    <p>{{ form.is_finished(checked=data.is_finished) }} {{ form.is_finished.label }}</p>
+    {% endif %}
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
 </form>
 {% endblock %}

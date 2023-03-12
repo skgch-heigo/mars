@@ -1,12 +1,11 @@
 import datetime
 import json
 
-
 from flask import Flask, url_for, render_template, redirect, request, make_response, session
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, EmailField
 from wtforms.validators import DataRequired, EqualTo
-from flask_login import LoginManager, login_user, login_required, logout_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -19,14 +18,12 @@ from data.forms.login_in import LoginInForm
 from data.forms.user import UserForm
 from data.forms.job import JobForm
 
-
 db_session.global_init("db/blogs.db")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(
     days=365
 )
-
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -62,23 +59,56 @@ def login():
     return render_template('login_in.html', title='Авторизация', form=form)
 
 
-@app.route('/add_job',  methods=['GET', 'POST'])
+@app.route('/add_job', methods=['GET', 'POST'])
 @login_required
 def add_job():
     form = JobForm()
     if form.validate_on_submit():
-        db_sess = db_session.create_session()
         job = Jobs()
+        db_sess = db_session.create_session()
         job.job = form.title.data
         job.team_leader = int(form.team_leader.data)
         job.work_size = int(form.work_size.data)
         job.collaborators = form.collaborators.data
         job.is_finished = form.is_finished.data
+        job.author = current_user.id
         db_sess.add(job)
         db_sess.commit()
         return redirect('/')
     return render_template('job_form.html', title='Добавление работы',
-                           form=form)
+                           form=form, action="add", data=None)
+
+
+@app.route('/delete_job/<id_job>')
+@login_required
+def delete_job(id_job):
+    db_sess = db_session.create_session()
+    data = db_sess.query(Jobs).filter(Jobs.id == id_job).first()
+    if data.author == current_user.id or current_user.id == 1:
+        db_sess.delete(data)
+        db_sess.commit()
+        return redirect('/')
+    return "У вас нет прав на это действие"
+
+
+@app.route('/change_job/<id_job>', methods=['GET', 'POST'])
+@login_required
+def change_job(id_job):
+    db_sess = db_session.create_session()
+    data = db_sess.query(Jobs).filter(Jobs.id == id_job).first()
+    if data.author == current_user.id or current_user.id == 1:
+        form = JobForm()
+        if form.validate_on_submit():
+            data.job = form.title.data
+            data.team_leader = int(form.team_leader.data)
+            data.work_size = int(form.work_size.data)
+            data.collaborators = form.collaborators.data
+            data.is_finished = form.is_finished.data
+            db_sess.commit()
+            return redirect('/')
+        return render_template('job_form.html', title='Добавление работы',
+                               form=form, action="change", data=data)
+    return "У вас нет прав на это действие"
 
 
 @app.route('/logout')

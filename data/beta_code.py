@@ -47,3 +47,4 @@ class Jobs(SqlAlchemyBase):
                                    default=datetime.datetime.now)
     end_date = sqlalchemy.Column(sqlalchemy.DateTime, nullable=True)
     is_finished = sqlalchemy.Column(sqlalchemy.Boolean, nullable=True)
+    author = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
