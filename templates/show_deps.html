@@ -1,0 +1,28 @@
+{% extends "main_page.html" %}
+
+{% block content2 %}
+<h1 style="text-allign: center">List of Departments</h1>
+{% for item in departments %}
+<h3>Action # {{item.id}}</h3>
+<p>
+<table>
+    <tr>
+        <th>Title of department</th>
+        <th>Chief</th>
+        <th>Members</th>
+        <th>Department email</th>
+    </tr>
+    <tr>
+        <td>{{item.title}}</td>
+        <td>{{item.chief}}</td>
+        <td>{{item.members}}</td>
+        <td>{{item.email}}</td>
+  </tr>
+</table>
+{% if current_user.is_authenticated and (current_user.id == 1 or item.chief_id == current_user.id) %}
+<a class="btn btn-warning " href="/change_department/{{item.id}}">Изменить</a>
+<a class="btn btn-danger " href="/delete_department/{{item.id}}">Удалить</a>
+{% endif %}
+</p>
+{% endfor %}
+{% endblock %}

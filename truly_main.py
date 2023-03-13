@@ -17,6 +17,7 @@ from data.departments import Departments
 from data.forms.login_in import LoginInForm
 from data.forms.user import UserForm
 from data.forms.job import JobForm
+from data.forms.deps import DepsForm
 
 db_session.global_init("db/blogs.db")
 app = Flask(__name__)
@@ -79,6 +80,37 @@ def add_job():
                            form=form, action="add", data=None)
 
 
+@app.route('/add_department', methods=['GET', 'POST'])
+@login_required
+def add_dep():
+    form = DepsForm()
+    if form.validate_on_submit():
+        dep = Departments()
+        db_sess = db_session.create_session()
+        dep.title = form.title.data
+        dep.chief = int(form.chief.data)
+        dep.members = form.members.data
+        dep.email = form.email.data
+        dep.author = current_user.id
+        db_sess.add(dep)
+        db_sess.commit()
+        return redirect('/departments')
+    return render_template('deps.html', title='Добавление департамента',
+                           form=form, action="add", data=None)
+
+
+@app.route('/delete_department/<id_dep>')
+@login_required
+def delete_dep(id_dep):
+    db_sess = db_session.create_session()
+    data = db_sess.query(Departments).filter(Departments.id == id_dep).first()
+    if current_user.id == 1 or current_user.id == data.chief:
+        db_sess.delete(data)
+        db_sess.commit()
+        return redirect('/departments')
+    return "У вас нет прав на это действие"
+
+
 @app.route('/delete_job/<id_job>')
 @login_required
 def delete_job(id_job):
@@ -88,6 +120,26 @@ def delete_job(id_job):
         db_sess.delete(data)
         db_sess.commit()
         return redirect('/')
+    return "У вас нет прав на это действие"
+
+
+@app.route('/change_department/<id_dep>', methods=['GET', 'POST'])
+@login_required
+def change_dep(id_dep):
+    db_sess = db_session.create_session()
+    data = db_sess.query(Departments).filter(Departments.id == id_dep).first()
+    if current_user.id == 1 or current_user.id == data.chief:
+        form = DepsForm()
+        if form.validate_on_submit():
+            data.title = form.title.data
+            data.chief = int(form.chief.data)
+            data.members = form.members.data
+            data.email = form.email.data
+            data.author = current_user.id
+            db_sess.commit()
+            return redirect('/departments')
+        return render_template('deps.html', title='Изменение департамента',
+                               form=form, action="change", data=data)
     return "У вас нет прав на это действие"
 
 
@@ -266,6 +318,24 @@ def jobs():
         "jobs": jobs_dict
     }
     return render_template('jobs.html', **params)
+
+
+@app.route('/departments')
+def deps():
+    jobs_dict = []
+    db_sess = db_session.create_session()
+    for dep in db_sess.query(Departments):
+        jobs_dict.append({"id": dep.id, "title": dep.title,
+                          "chief": None, "chief_id": dep.chief,
+                          "members": dep.members,
+                          "email": dep.email})
+        user = db_sess.query(User).filter(User.id == dep.chief).first()
+        jobs_dict[-1]["chief"] = user.name + " " + user.surname
+    params = {
+        "title": "Departments",
+        "departments": jobs_dict
+    }
+    return render_template('show_deps.html', **params)
 
 
 @app.route('/success')
