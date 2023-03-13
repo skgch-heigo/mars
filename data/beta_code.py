@@ -1,6 +1,7 @@
 import datetime
 import sqlalchemy
 from .db_session import SqlAlchemyBase
+from sqlalchemy import orm
 from flask_login import UserMixin
 from hmac import compare_digest
 
@@ -48,3 +49,6 @@ class Jobs(SqlAlchemyBase):
     end_date = sqlalchemy.Column(sqlalchemy.DateTime, nullable=True)
     is_finished = sqlalchemy.Column(sqlalchemy.Boolean, nullable=True)
     author = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    categories = orm.relationship("Category",
+                                  secondary="association",
+                                  backref="jobs")

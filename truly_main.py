@@ -13,6 +13,7 @@ from data import db_session
 
 from data.beta_code import Jobs, User
 from data.departments import Departments
+from data.category import Category
 
 from data.forms.login_in import LoginInForm
 from data.forms.user import UserForm
@@ -71,13 +72,17 @@ def add_job():
         job.team_leader = int(form.team_leader.data)
         job.work_size = int(form.work_size.data)
         job.collaborators = form.collaborators.data
+        cats = []
+        for i in db_sess.query(Category).filter(Category.id.in_(form.category.data.split(", "))):
+            cats.append(i)
+        job.categories = cats
         job.is_finished = form.is_finished.data
         job.author = current_user.id
         db_sess.add(job)
         db_sess.commit()
         return redirect('/')
     return render_template('job_form.html', title='Добавление работы',
-                           form=form, action="add", data=None)
+                           form=form, action="add", data=None, categories="")
 
 
 @app.route('/add_department', methods=['GET', 'POST'])
@@ -155,11 +160,16 @@ def change_job(id_job):
             data.team_leader = int(form.team_leader.data)
             data.work_size = int(form.work_size.data)
             data.collaborators = form.collaborators.data
+            cats = []
+            for i in db_sess.query(Category).filter(Category.id.in_(form.category.data.split(", "))):
+                cats.append(i)
+            data.categories = cats
             data.is_finished = form.is_finished.data
             db_sess.commit()
             return redirect('/')
-        return render_template('job_form.html', title='Добавление работы',
-                               form=form, action="change", data=data)
+        return render_template('job_form.html', title='Изменение работы',
+                               form=form, action="change", data=data,
+                               categories=", ".join([str(i.id) for i in data.categories]))
     return "У вас нет прав на это действие"
 
 
@@ -309,7 +319,7 @@ def jobs():
         jobs_dict.append({"id": job.id, "title": job.job,
                           "leader": None, "team_leader": job.team_leader,
                           "duration": str(job.work_size) + " hours",
-                          "collabs": job.collaborators,
+                          "collabs": job.collaborators, "categories": ", ".join([i.name for i in job.categories]),
                           "finish": ("Is finished" if job.is_finished else "Is not finished")})
         user = db_sess.query(User).filter(User.id == job.team_leader).first()
         jobs_dict[-1]["leader"] = user.name + " " + user.surname
