@@ -9,7 +9,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from data import db_session
+from data import db_session, jobs_api
 
 from data.beta_code import Jobs, User
 from data.departments import Departments
@@ -372,4 +372,5 @@ def que():
 
 
 if __name__ == '__main__':
+    app.register_blueprint(jobs_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
