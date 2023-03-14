@@ -1,4 +1,5 @@
-from requests import post
+from requests import post, get
+
 
 print(post('http://127.0.0.1:8080/api/jobs').json())
 # нет json
@@ -26,3 +27,5 @@ print(post('http://127.0.0.1:8080/api/jobs',
                  "collaborators": "1, 2",
                  "is_finished": False,
                  "author": 2}).json())
+
+print(get('http://127.0.0.1:8080/api/jobs').json())
