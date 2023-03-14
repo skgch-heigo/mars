@@ -1,5 +1,5 @@
 import flask
-from flask import jsonify, make_response
+from flask import jsonify, make_response, request
 
 from . import db_session
 from .beta_code import Jobs
@@ -52,3 +52,33 @@ def get_one_news(jobs_id):
                 "author"))
         }
     )
+
+
+@blueprint.route('/api/jobs', methods=['POST'])
+def create_news():
+    print(request.json, "1")
+    if not request.json:
+        return jsonify({'error': 'Empty request'})
+    elif not all(key in request.json for key in
+                 ["team_leader",
+                  "job",
+                  "work_size",
+                  "collaborators",
+                  "is_finished",
+                  "author"]):
+        return jsonify({'error': 'Bad request'})
+    db_sess = db_session.create_session()
+    job = Jobs()
+    job.team_leader = request.json['team_leader']
+    job.job = request.json['job']
+    job.work_size = request.json['work_size']
+    job.collaborators = request.json['collaborators']
+    job.is_finished = request.json['is_finished']
+    job.author = request.json['author']
+    if "start_date" in request.json:
+        job.start_date = request.json["start_date"]
+    if "end_date" in request.json:
+        job.start_date = request.json["end_date"]
+    db_sess.add(job)
+    db_sess.commit()
+    return jsonify({'success': 'OK'})
