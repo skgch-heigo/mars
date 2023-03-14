@@ -1,7 +1,7 @@
 import datetime
 import json
 
-from flask import Flask, url_for, render_template, redirect, request, make_response, session
+from flask import Flask, url_for, render_template, redirect, request, make_response, session, jsonify
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, EmailField
 from wtforms.validators import DataRequired, EqualTo
@@ -369,6 +369,16 @@ def news():
 @app.route('/queue')
 def que():
     return render_template('queue.html')
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+
+@app.errorhandler(400)
+def bad_request(_):
+    return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
 if __name__ == '__main__':
