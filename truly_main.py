@@ -7,6 +7,8 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Email
 from wtforms.validators import DataRequired, EqualTo
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
+from flask_restful import reqparse, abort, Api, Resource
+
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from data import db_session, jobs_api
@@ -20,12 +22,26 @@ from data.forms.user import UserForm
 from data.forms.job import JobForm
 from data.forms.deps import DepsForm
 
+from data import users_resource
+
 db_session.global_init("db/blogs.db")
 app = Flask(__name__)
+api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(
     days=365
 )
+
+# для списка объектов
+api.add_resource(users_resource.UsersListResource, '/api/v2/users')
+
+# для одного объекта
+api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:user_id>')
+
+api.add_resource(users_resource.UsersListResourceDemo, '/api/users')
+
+api.add_resource(users_resource.UsersResourceDemo, '/api/users/<int:user_id>')
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
