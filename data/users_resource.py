@@ -2,7 +2,7 @@ from flask import jsonify
 from flask_restful import reqparse, abort, Api, Resource
 from data import db_session
 from data.beta_code import Jobs, User
-from data.user_parser import parser
+from data.user_parser import parser, parser2
 
 
 class UsersResource(Resource):
@@ -20,6 +20,28 @@ class UsersResource(Resource):
         session.delete(user)
         session.commit()
         return jsonify({'success': 'OK'})
+
+    def put(self, user_id):
+        abort_if_news_not_found(user_id)
+        args = parser2.parse_args()
+        session = db_session.create_session()
+        user = session.query(User).get(user_id)
+        if args['surname']:
+            user.surname = args['surname']
+        if args['name']:
+            user.name = args['name']
+        if args['age']:
+            user.age = args['age']
+        if args['position']:
+            user.position = args['position']
+        if args['speciality']:
+            user.speciality = args['speciality']
+        if args['address']:
+            user.address = args['address']
+        if args['email']:
+            user.email = args['email']
+        if args['hashed_password']:
+            user.hashed_password = args['hashed_password']
 
 
 class UsersListResource(Resource):
@@ -66,6 +88,32 @@ class UsersResourceDemo(Resource):
         session = db_session.create_session()
         user = session.query(User).get(user_id)
         session.delete(user)
+        session.commit()
+        return jsonify({'success': 'OK'})
+
+    def put(self, user_id):
+        abort_if_news_not_found(user_id)
+        args = parser2.parse_args()
+        session = db_session.create_session()
+        user = session.query(User).get(user_id)
+        if args['surname']:
+            user.surname = args['surname']
+        if args['name']:
+            user.name = args['name']
+        if args['age']:
+            user.age = args['age']
+        if args['position']:
+            user.position = args['position']
+        if args['speciality']:
+            user.speciality = args['speciality']
+        if args['address']:
+            user.address = args['address']
+        if args['email']:
+            user.email = args['email']
+        if args['hashed_password']:
+            user.hashed_password = args['hashed_password']
+
+        session.add(user)
         session.commit()
         return jsonify({'success': 'OK'})
 
