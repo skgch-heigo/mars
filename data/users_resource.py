@@ -42,6 +42,8 @@ class UsersResource(Resource):
             user.email = args['email']
         if args['hashed_password']:
             user.hashed_password = args['hashed_password']
+        session.commit()
+        return jsonify({'success': 'OK'})
 
 
 class UsersListResource(Resource):
@@ -112,8 +114,6 @@ class UsersResourceDemo(Resource):
             user.email = args['email']
         if args['hashed_password']:
             user.hashed_password = args['hashed_password']
-
-        session.add(user)
         session.commit()
         return jsonify({'success': 'OK'})
 

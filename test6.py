@@ -23,4 +23,4 @@ print(delete('http://127.0.0.1:8080/api/users/999').json())
 # нет такого id
 
 print(put('http://127.0.0.1:8080/api/users/3',
-          json={'age': 27}).json())
+          json={'age': 26}).json())

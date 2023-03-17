@@ -22,7 +22,7 @@ from data.forms.user import UserForm
 from data.forms.job import JobForm
 from data.forms.deps import DepsForm
 
-from data import users_resource
+from data import users_resource, jobs_resource
 
 db_session.global_init("db/blogs.db")
 app = Flask(__name__)
@@ -32,11 +32,13 @@ app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(
     days=365
 )
 
-# для списка объектов
 api.add_resource(users_resource.UsersListResource, '/api/v2/users')
 
-# для одного объекта
 api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:user_id>')
+
+api.add_resource(jobs_resource.JobsListResource, '/api/v2/jobs')
+
+api.add_resource(jobs_resource.JobsResource, '/api/v2/jobs/<int:user_id>')
 
 api.add_resource(users_resource.UsersListResourceDemo, '/api/users')
 

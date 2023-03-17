@@ -41,7 +41,7 @@ def get_one_jobs(jobs_id):
         return jsonify({'error': 'Not found'})
     return jsonify(
         {
-            'news': jobs.to_dict(only=(
+            'jobs': jobs.to_dict(only=(
                 "id",
                 "team_leader",
                 "job",
